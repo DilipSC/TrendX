@@ -1,8 +1,12 @@
 import os
 from dotenv import load_dotenv
+from pathlib import Path
 
-# Load environment variables from .env.local file specifically
-load_dotenv('.env.local', override=True)
+# Get the directory containing utils.py
+BASE_DIR = Path(__file__).resolve().parent
+
+# Load environment variables from .env.local file with absolute path
+load_dotenv(BASE_DIR / '.env.local', override=True)
 
 # Twitter Credentials
 TWITTER_USERNAME = os.getenv("TWITTER_USERNAME")
@@ -16,8 +20,8 @@ MONGO_URI = os.getenv("MONGO_URI")
 MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "twitter_trends")
 MONGO_COLLECTION_NAME = os.getenv("MONGO_COLLECTION_NAME", "trends")
 
-# Debug print statements AFTER variables are defined
-print("Environment variables loaded:")
+# Debug print statements
+print("Environment variables loaded from:", str(BASE_DIR / '.env.local'))
 print(f"TWITTER_USERNAME: {'set' if TWITTER_USERNAME else 'not set'}")
 print(f"TWITTER_PASSWORD: {'set' if TWITTER_PASSWORD else 'not set'}")
 print(f"MONGO_URI: {'set' if MONGO_URI else 'not set'}")

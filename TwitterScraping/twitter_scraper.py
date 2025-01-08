@@ -17,6 +17,7 @@ from utils import (
     MONGO_DB_NAME, 
     MONGO_COLLECTION_NAME
 )
+import sys
 
 # Configure ProxyMesh in Selenium
 def configure_driver():
@@ -217,31 +218,36 @@ def store_in_mongodb(data):
     collection.insert_one(data)
 
 if __name__ == "__main__":
-    unique_id = str(uuid4())
-    driver = configure_driver()
-
     try:
-        # Scrape data
-        trends_data = scrape_twitter(driver)
-        ip_address = PROXY_URL.split("@")[-1].split(":")[0]
-        end_time = datetime.now()
+        unique_id = str(uuid4())
+        driver = configure_driver()
 
-        # Prepare MongoDB data
-        data = {
-            "unique_id": unique_id,
-            "trends": trends_data,
-            "end_time": end_time.strftime("%Y-%m-%d %H:%M:%S"),
-            "ip_address": ip_address,
-        }
+        try:
+            # Scrape data
+            trends_data = scrape_twitter(driver)
+            ip_address = PROXY_URL.split("@")[-1].split(":")[0] if PROXY_URL else 'local'
+            end_time = datetime.now()
 
-        # Store data in MongoDB
-        store_in_mongodb(data)
-        print("Data stored successfully!")
-        print("\nTrending Topics:")
-        for trend in trends_data:
-            print("\n---")
-            for key, value in trend.items():
-                print(f"{key}: {value}")
+            # Prepare MongoDB data
+            data = {
+                "unique_id": unique_id,
+                "trends": trends_data,
+                "end_time": end_time.strftime("%Y-%m-%d %H:%M:%S"),
+                "ip_address": ip_address,
+            }
+
+            # Store data in MongoDB
+            store_in_mongodb(data)
+            print("Data stored successfully!")
+            print("\nTrending Topics:")
+            for trend in trends_data:
+                print("\n---")
+                for key, value in trend.items():
+                    print(f"{key}: {value}")
+                
+        finally:
+            driver.quit()
             
-    finally:
-        driver.quit()
+    except Exception as e:
+        print(f"Error during execution: {str(e)}", file=sys.stderr)
+        sys.exit(1)
