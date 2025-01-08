@@ -9,12 +9,12 @@ import traceback
 from utils import PROXY_URL
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+CORS(app)  
 
 def create_driver():
     chrome_options = Options()
     
-    # Add basic Chrome options
+  
     chrome_options.add_argument('--disable-blink-features=AutomationControlled')
     chrome_options.add_argument('--start-maximized')
     chrome_options.add_argument('--disable-dev-shm-usage')
@@ -23,7 +23,7 @@ def create_driver():
     chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
     chrome_options.add_experimental_option('useAutomationExtension', False)
     
-    # Configure proxy with authentication if available
+
     if PROXY_URL:
         try:
             from selenium.webdriver.common.proxy import Proxy, ProxyType
@@ -31,19 +31,19 @@ def create_driver():
             proxy = Proxy()
             proxy.proxy_type = ProxyType.MANUAL
             
-            # Extract proxy components
+           
             proxy_parts = PROXY_URL.replace('http://', '').split('@')
             auth, host_port = proxy_parts
             username, password = auth.split(':')
             
-            # Configure proxy capabilities
+            
             proxy.http_proxy = host_port
-            proxy.ssl_proxy = host_port  # Use same for HTTPS
+            proxy.ssl_proxy = host_port  
             
             capabilities = webdriver.DesiredCapabilities.CHROME.copy()
             proxy.add_to_capabilities(capabilities)
             
-            # Add proxy authentication
+            
             chrome_options.add_argument(f'--proxy-server={host_port}')
             chrome_options.add_argument(f'--proxy-auth={username}:{password}')
             
@@ -55,19 +55,19 @@ def create_driver():
                     desired_capabilities=capabilities
                 )
             except TypeError:
-                # For newer versions of Selenium
+                
                 driver = webdriver.Chrome(options=chrome_options)
                 
         except Exception as e:
             print(f"Failed to configure proxy: {str(e)}")
             print(traceback.format_exc())
-            # Try without proxy as fallback
+            
             print("Attempting to create driver without proxy...")
             driver = webdriver.Chrome(options=chrome_options)
     else:
         driver = webdriver.Chrome(options=chrome_options)
     
-    # Hide automation
+    
     driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
     
     return driver
@@ -76,21 +76,21 @@ def create_driver():
 def start_scraping():
     driver = None
     try:
-        # Initialize unique ID and driver
+        
         unique_id = str(uuid4())
         print("Creating WebDriver...")
         driver = create_driver()
         print("WebDriver created successfully")
         
         try:
-            # Scrape data
+           
             print("Starting scraping...")
             trends_data = scrape_twitter(driver)
             print(f"Scraping completed. Found {len(trends_data)} trends")
             
             end_time = datetime.now()
 
-            # Prepare MongoDB data
+            
             data = {
                 "unique_id": unique_id,
                 "trends": trends_data,
@@ -98,7 +98,7 @@ def start_scraping():
                 "timestamp": end_time,
             }
 
-            # Store data in MongoDB
+           
             print("Storing data in MongoDB...")
             store_in_mongodb(data)
             print("Data stored successfully")
@@ -151,12 +151,12 @@ def get_trends():
         db = client[MONGO_DB_NAME]
         collection = db[MONGO_COLLECTION_NAME]
         
-        # Get the latest 10 trend documents
+       
         trends = list(collection.find({})
                      .sort('timestamp', -1)
                      .limit(10))
         
-        # Convert ObjectId to string for JSON serialization
+        
         for trend in trends:
             trend['_id'] = str(trend['_id'])
             
@@ -176,7 +176,7 @@ def get_trends():
         client.close()
 
 if __name__ == '__main__':
-    # Enable more detailed logging
+    
     import logging
     logging.basicConfig(level=logging.DEBUG)
     app.logger.setLevel(logging.DEBUG)
